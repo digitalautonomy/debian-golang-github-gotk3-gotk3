@@ -1,0 +1,64 @@
+language: go
+
+go_import_path: github.com/gotk3/gotk3
+
+env:
+  - GOARCH=amd64
+
+jobs:
+  include:
+      # Testing on trusty, gtk 3.10
+    - os: linux
+      dist: trusty
+      go: "1.13"
+
+      # Testing on xenial, gtk 3.18
+    - os: linux
+      dist: xenial
+      go: "1.13"
+
+      # Testing on bionic, gtk 3.22
+      # Majority of the go versions here for compatibility checking
+    - os: linux
+      dist: bionic
+      go: "1.8"
+    - os: linux
+      dist: bionic
+      go: "1.9"
+    - os: linux
+      dist: bionic
+      go: "1.10"
+    - os: linux
+      dist: bionic
+      go: "1.11"
+    - os: linux
+      dist: bionic
+      go: "1.12"
+    - os: linux
+      dist: bionic
+      go: "1.13"
+    - os: linux
+      dist: bionic
+      go: tip
+
+addons:
+  apt:
+    packages:
+    - gtk+3.0
+    - libgtk-3-dev
+    - xvfb
+
+before_install:
+  - "export DISPLAY=:99.0"
+  - sudo /usr/bin/Xvfb $DISPLAY 2>1 > /dev/null &
+  - "export GTK_VERSION=$(pkg-config --modversion gtk+-3.0 | tr . _| cut -d '_' -f 1-2)"
+  - "export Glib_VERSION=$(pkg-config --modversion glib-2.0)"
+  - "export Cairo_VERSION=$(pkg-config --modversion cairo)"
+  - "export Pango_VERSION=$(pkg-config --modversion pango)"
+  - echo "GTK version ${GTK_VERSION} (Glib ${Glib_VERSION}, Cairo ${Cairo_VERSION}, Pango ${Pango_VERSION})"
+
+install:
+  - go get -t -tags "gtk_${GTK_VERSION}" ./...
+
+script:
+  - go test -tags "gtk_${GTK_VERSION}" ./...
