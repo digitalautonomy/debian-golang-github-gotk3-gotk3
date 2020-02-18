@@ -1,0 +1,5 @@
+golang-github-gotk3-gotk3 (0.4.0+git20200217.d9d1e28-1) UNRELEASED; urgency=medium
+
+  * Initial release (Closes: 999999)
+
+ -- Ola Bini <debian@olabini.se>  Tue, 18 Feb 2020 20:30:58 +0100

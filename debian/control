@@ -1,0 +1,48 @@
+Source: golang-github-gotk3-gotk3
+Section: devel
+Priority: optional
+Maintainer: Ola Bini <debian@olabini.se> 
+Uploaders: Ola Bini <debian@olabini.se>
+Build-Depends: debhelper (>= 11),
+               dh-golang,
+               golang-go,
+               libglib2.0-dev,
+               libcairo2-dev,
+               libpango1.0-dev,
+               libgtk-3-dev,
+               libgio-cil,
+               xvfb,
+               xauth
+Standards-Version: 4.2.1
+Homepage: https://github.com/gotk3/gotk3
+Vcs-Browser: https://salsa.debian.org/go-team/packages/golang-github-gotk3-gotk3
+Vcs-Git: https://salsa.debian.org/go-team/packages/golang-github-gotk3-gotk3.git
+XS-Go-Import-Path: github.com/gotk3/gotk3
+Testsuite: autopkgtest-pkg-go
+
+Package: golang-github-gotk3-gotk3-dev
+Architecture: all
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         golang-go,
+         libglib2.0-dev,
+         libcairo2-dev,
+         libpango1.0-dev,
+         libgtk-3-dev,
+         libgio-cil
+Description: Go bindings for GTK3
+ The gotk3 project provides Go bindings for GTK+3 and dependent projects.
+ Each component is given its own subdirectory, which is used as the
+ import path for the package.
+ .
+ Partial binding support for the following libraries is currently implemented:
+ .
+   - GTK+3 (3.12 and later)
+   - GDK 3 (3.12 and later)
+   - GLib 2 (2.36 and later)
+   - Cairo (1.10 and later)
+ .
+ Care has been taken for memory management to work seamlessly with Go's
+ garbage collector without the need to use or understand GObject's floating
+ references.
+
