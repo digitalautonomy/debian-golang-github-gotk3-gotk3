@@ -5,7 +5,7 @@ build:
   stage: build
   image: sacurio/debianpackager:0.2
   before_script:
-    - 'apt-get update && apt-get install -y --no-install-recommends golang-golang-x-crypto-dev golang-golang-x-net-dev'
+    - 'apt-get update && apt-get install -y --no-install-recommends golang-github-onsi-ginkgo-dev golang-gomega-dev golang-x-text-dev'
   script:
     - gbp buildpackage --git-ignore-branch
     - mkdir debian_build
