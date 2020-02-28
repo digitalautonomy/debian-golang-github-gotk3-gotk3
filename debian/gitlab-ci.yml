@@ -5,7 +5,7 @@ build:
   stage: build
   image: sacurio/debianpackager:0.2
   before_script:
-    - 'apt-get update && apt-get install -y --no-install-recommends libglib2.0-dev libcairo2-dev libpango1.0-dev libgtk-3-dev libgio-cil xvfb xauth'
+    - 'apt-get update && apt-get install -y --no-install-recommends libglib2.0-dev libcairo2-dev libpango1.0-dev libgtk-3-dev xvfb xauth'
     - "eval $(ssh-agent -s)"
     - 'ssh-add <(echo "$DEBIAN_PACKAGING_PRIVATE_KEY")'
     - mkdir -p ~/.ssh; chmod 700 ~/.ssh

@@ -1,7 +1,7 @@
 Source: golang-github-gotk3-gotk3
 Section: devel
 Priority: optional
-Maintainer: Ola Bini <debian@olabini.se> 
+Maintainer: Ola Bini <debian@olabini.se>
 Uploaders: Ola Bini <debian@olabini.se>
 Build-Depends: debhelper (>= 11),
                dh-golang,
@@ -10,7 +10,6 @@ Build-Depends: debhelper (>= 11),
                libcairo2-dev,
                libpango1.0-dev,
                libgtk-3-dev,
-               libgio-cil,
                xvfb,
                xauth
 Standards-Version: 4.2.1
@@ -28,8 +27,7 @@ Depends: ${shlibs:Depends},
          libglib2.0-dev,
          libcairo2-dev,
          libpango1.0-dev,
-         libgtk-3-dev,
-         libgio-cil
+         libgtk-3-dev
 Description: Go bindings for GTK3
  The gotk3 project provides Go bindings for GTK+3 and dependent projects.
  Each component is given its own subdirectory, which is used as the
@@ -45,4 +43,3 @@ Description: Go bindings for GTK3
  Care has been taken for memory management to work seamlessly with Go's
  garbage collector without the need to use or understand GObject's floating
  references.
-
