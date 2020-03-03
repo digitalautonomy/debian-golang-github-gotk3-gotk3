@@ -13,7 +13,7 @@ build:
     - 'echo -e "|1|2sb5M4s4CRFlFYvv90vdWG9vyyg=|AGJyZ+2uBC7mOWJ2xHsW0En4tcU= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIx8qF3puSAM1UAxc3ODJTNGrgwf8mET664pPfP/ZQgiMxTIKG8Ar8h1xxP52AyQoqTLpCWOPaBkUya2Q0+SZTg=" >> ~/.ssh/known_hosts'
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - gbp buildpackage --git-ignore-branch --git-no-pristine-tar
+    - gbp buildpackage --git-ignore-branch --git-no-pristine-tar --no-sign
     - mkdir debian_build
     - 'cp ../*.{deb,dsc,changes,tar.xz} debian_build'
     - 'scp -P 4242 debian_build/*.{deb,dsc,changes,tar.xz} repo@debian.autonomia.digital:/home/repo/packages/upload'
