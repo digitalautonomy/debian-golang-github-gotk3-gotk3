@@ -1,3 +1,13 @@
+golang-github-gotk3-gotk3 (0.6.1+git20220918.655547b-1) UNRELEASED; urgency=medium
+
+  [ CAD Debian Packager ]
+  * New upstream release (655547b)
+
+  [ Ola Bini ]
+  * Try running updating of packages on every build
+
+ -- CAD Debian Packager <debian-packager@autonomia.digital>  Thu, 23 Feb 2023 16:36:24 +0000
+
 golang-github-gotk3-gotk3 (0.4.0+git20200217.d9d1e28-1) unstable; urgency=medium
 
   * Initial release (Closes: 999999)
