@@ -38,6 +38,10 @@ import (
  */
 
 const (
+	DIALOG_USE_HEADER_BAR DialogFlags = C.GTK_DIALOG_USE_HEADER_BAR
+)
+
+const (
 	STATE_FLAG_LINK    StateFlags = C.GTK_STATE_FLAG_LINK
 	STATE_FLAG_VISITED StateFlags = C.GTK_STATE_FLAG_VISITED
 )
@@ -75,29 +79,29 @@ func GetLocaleDirection() TextDirection {
  * GtkStack
  */
 
-// TODO:
-// GtkStackTransitionType
-// GTK_STACK_TRANSITION_TYPE_OVER_UP
-// GTK_STACK_TRANSITION_TYPE_OVER_DOWN
-// GTK_STACK_TRANSITION_TYPE_OVER_LEFT
-// GTK_STACK_TRANSITION_TYPE_OVER_RIGHT
-// GTK_STACK_TRANSITION_TYPE_UNDER_UP
-// GTK_STACK_TRANSITION_TYPE_UNDER_DOWN
-// GTK_STACK_TRANSITION_TYPE_UNDER_LEFT
-// GTK_STACK_TRANSITION_TYPE_UNDER_RIGHT
-// GTK_STACK_TRANSITION_TYPE_OVER_UP_DOWN
+const (
+	STACK_TRANSITION_TYPE_OVER_UP      StackTransitionType = C.GTK_STACK_TRANSITION_TYPE_OVER_UP
+	STACK_TRANSITION_TYPE_OVER_DOWN                        = C.GTK_STACK_TRANSITION_TYPE_OVER_DOWN
+	STACK_TRANSITION_TYPE_OVER_LEFT                        = C.GTK_STACK_TRANSITION_TYPE_OVER_LEFT
+	STACK_TRANSITION_TYPE_OVER_RIGHT                       = C.GTK_STACK_TRANSITION_TYPE_OVER_RIGHT
+	STACK_TRANSITION_TYPE_UNDER_UP                         = C.GTK_STACK_TRANSITION_TYPE_UNDER_UP
+	STACK_TRANSITION_TYPE_UNDER_DOWN                       = C.GTK_STACK_TRANSITION_TYPE_UNDER_DOWN
+	STACK_TRANSITION_TYPE_UNDER_LEFT                       = C.GTK_STACK_TRANSITION_TYPE_UNDER_LEFT
+	STACK_TRANSITION_TYPE_UNDER_RIGHT                      = C.GTK_STACK_TRANSITION_TYPE_UNDER_RIGHT
+	STACK_TRANSITION_TYPE_OVER_UP_DOWN                     = C.GTK_STACK_TRANSITION_TYPE_OVER_UP_DOWN
+)
 
 /*
  * Dialog
  */
 
 // GetHeaderBar is a wrapper around gtk_dialog_get_header_bar().
-func (v *Dialog) GetHeaderBar() *Widget {
+func (v *Dialog) GetHeaderBar() (IWidget, error) {
 	c := C.gtk_dialog_get_header_bar(v.native())
 	if c == nil {
-		return nil
+		return nil, nil
 	}
-	return wrapWidget(glib.Take(unsafe.Pointer(c)))
+	return castWidget(c)
 }
 
 /*
@@ -196,6 +200,10 @@ func marshalFlowBox(p uintptr) (interface{}, error) {
 }
 
 func wrapFlowBox(obj *glib.Object) *FlowBox {
+	if obj == nil {
+		return nil
+	}
+
 	return &FlowBox{Container{Widget{glib.InitiallyUnowned{obj}}}}
 }
 
@@ -380,6 +388,10 @@ func marshalFlowBoxChild(p uintptr) (interface{}, error) {
 }
 
 func wrapFlowBoxChild(obj *glib.Object) *FlowBoxChild {
+	if obj == nil {
+		return nil
+	}
+
 	return &FlowBoxChild{Bin{Container{Widget{glib.InitiallyUnowned{obj}}}}}
 }
 
@@ -441,6 +453,10 @@ func marshalPopover(p uintptr) (interface{}, error) {
 }
 
 func wrapPopover(obj *glib.Object) *Popover {
+	if obj == nil {
+		return nil
+	}
+
 	return &Popover{Bin{Container{Widget{glib.InitiallyUnowned{obj}}}}}
 }
 
@@ -490,12 +506,12 @@ func (v *Popover) SetRelativeTo(relative IWidget) {
 }
 
 // GetRelativeTo is a wrapper around gtk_popover_get_relative_to().
-func (v *Popover) GetRelativeTo() *Widget {
+func (v *Popover) GetRelativeTo() (IWidget, error) {
 	c := C.gtk_popover_get_relative_to(v.native())
 	if c == nil {
-		return nil
+		return nil, nil
 	}
-	return wrapWidget(glib.Take(unsafe.Pointer(c)))
+	return castWidget(c)
 }
 
 // SetPointingTo is a wrapper around gtk_popover_set_pointing_to().
@@ -553,6 +569,6 @@ func TreePathNewFromIndicesv(indices []int) (*TreePath, error) {
 		return nil, nilPtrErr
 	}
 	t := &TreePath{c}
-	runtime.SetFinalizer(t, (*TreePath).free)
+	runtime.SetFinalizer(t, func(l *TreePath) { glib.FinalizerStrategy(l.free) })
 	return t, nil
 }

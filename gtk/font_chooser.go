@@ -55,6 +55,10 @@ func marshalFontChooser(p uintptr) (interface{}, error) {
 }
 
 func wrapFontChooser(obj *glib.Object) *FontChooser {
+	if obj == nil {
+		return nil
+	}
+
 	return &FontChooser{obj}
 }
 
@@ -120,6 +124,10 @@ func marshalFontButton(p uintptr) (interface{}, error) {
 }
 
 func wrapFontButton(obj *glib.Object) *FontButton {
+	if obj == nil {
+		return nil
+	}
+
 	button := wrapButton(obj)
 	fc := wrapFontChooser(obj)
 	return &FontButton{*button, *fc}
@@ -203,6 +211,61 @@ func (v *FontButton) GetTitle() string {
 	c := C.gtk_font_button_get_title(v.native())
 	defer C.free(unsafe.Pointer(c))
 	return goString(c)
+}
+
+/*
+ * GtkFontChooserDialog
+ */
+
+// FontChooserDialog is a representation of GTK's GtkFontChooserDialog.
+type FontChooserDialog struct {
+	Dialog
+
+	// Interfaces
+	FontChooser
+}
+
+// native returns a pointer to the underlying GtkFontChooserDialog.
+func (v *FontChooserDialog) native() *C.GtkFontChooserDialog {
+	if v == nil || v.GObject == nil {
+		return nil
+	}
+
+	p := unsafe.Pointer(v.GObject)
+	return C.toGtkFontChooserDialog(p)
+}
+
+func marshalFontChooserDialog(p uintptr) (interface{}, error) {
+	c := C.g_value_get_object((*C.GValue)(unsafe.Pointer(p)))
+	return wrapFontChooserDialog(glib.Take(unsafe.Pointer(c))), nil
+}
+
+func wrapFontChooserDialog(obj *glib.Object) *FontChooserDialog {
+	if obj == nil {
+		return nil
+	}
+
+	dialog := wrapDialog(obj)
+	cc := wrapFontChooser(obj)
+	return &FontChooserDialog{*dialog, *cc}
+}
+
+// FontChooserDialogNew() is a wrapper around gtk_font_chooser_dialog_new().
+func FontChooserDialogNew(title string, parent IWindow) (*FontChooserDialog, error) {
+
+	cstr := C.CString(title)
+	defer C.free(unsafe.Pointer(cstr))
+
+	var w *C.GtkWindow = nil
+	if parent != nil {
+		w = parent.toWindow()
+	}
+
+	c := C.gtk_font_chooser_dialog_new((*C.gchar)(cstr), w)
+	if c == nil {
+		return nil, nilPtrErr
+	}
+	return wrapFontChooserDialog(glib.Take(unsafe.Pointer(c))), nil
 }
 
 /*
