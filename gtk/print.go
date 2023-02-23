@@ -2,15 +2,16 @@ package gtk
 
 // #include <gtk/gtk.h>
 // #include "gtk.go.h"
+// #include "print.go.h"
 import "C"
 import (
 	"errors"
 	"runtime"
-	"sync"
 	"unsafe"
 
 	"github.com/gotk3/gotk3/cairo"
 	"github.com/gotk3/gotk3/glib"
+	"github.com/gotk3/gotk3/internal/callback"
 	"github.com/gotk3/gotk3/pango"
 )
 
@@ -248,6 +249,10 @@ func marshalPageSetup(p uintptr) (interface{}, error) {
 }
 
 func wrapPageSetup(obj *glib.Object) *PageSetup {
+	if obj == nil {
+		return nil
+	}
+
 	return &PageSetup{obj}
 }
 
@@ -286,7 +291,7 @@ func (ps *PageSetup) SetOrientation(orientation PageOrientation) {
 func (ps *PageSetup) GetPaperSize() *PaperSize {
 	c := C.gtk_page_setup_get_paper_size(ps.native())
 	p := &PaperSize{c}
-	runtime.SetFinalizer(p, (*PaperSize).free)
+	runtime.SetFinalizer(p, func(v *PaperSize) { glib.FinalizerStrategy(v.free) })
 	return p
 }
 
@@ -466,7 +471,7 @@ func PaperSizeNew(name string) (*PaperSize, error) {
 	}
 
 	t := &PaperSize{c}
-	runtime.SetFinalizer(t, (*PaperSize).free)
+	runtime.SetFinalizer(t, func(v *PaperSize) { glib.FinalizerStrategy(v.free) })
 	return t, nil
 }
 
@@ -482,7 +487,7 @@ func PaperSizeNewFromPPD(name, displayName string, width, height float64) (*Pape
 		return nil, nilPtrErr
 	}
 	t := &PaperSize{c}
-	runtime.SetFinalizer(t, (*PaperSize).free)
+	runtime.SetFinalizer(t, func(v *PaperSize) { glib.FinalizerStrategy(v.free) })
 	return t, nil
 }
 
@@ -498,7 +503,7 @@ func PaperSizeNewCustom(name, displayName string, width, height float64, unit Un
 		return nil, nilPtrErr
 	}
 	t := &PaperSize{c}
-	runtime.SetFinalizer(t, (*PaperSize).free)
+	runtime.SetFinalizer(t, func(v *PaperSize) { glib.FinalizerStrategy(v.free) })
 	return t, nil
 }
 
@@ -509,7 +514,7 @@ func (ps *PaperSize) Copy() (*PaperSize, error) {
 		return nil, nilPtrErr
 	}
 	t := &PaperSize{c}
-	runtime.SetFinalizer(t, (*PaperSize).free)
+	runtime.SetFinalizer(t, func(v *PaperSize) { glib.FinalizerStrategy(v.free) })
 	return t, nil
 }
 
@@ -537,9 +542,11 @@ func PaperSizeGetPaperSizes(includeCustom bool) *glib.List {
 	})
 
 	runtime.SetFinalizer(glist, func(glist *glib.List) {
-		glist.FreeFull(func(item interface{}) {
-			ps := item.(*PaperSize)
-			C.gtk_paper_size_free(ps.GtkPaperSize)
+		glib.FinalizerStrategy(func() {
+			glist.FreeFull(func(item interface{}) {
+				ps := item.(*PaperSize)
+				C.gtk_paper_size_free(ps.GtkPaperSize)
+			})
 		})
 	})
 
@@ -648,6 +655,10 @@ func marshalPrintContext(p uintptr) (interface{}, error) {
 }
 
 func wrapPrintContext(obj *glib.Object) *PrintContext {
+	if obj == nil {
+		return nil
+	}
+
 	return &PrintContext{obj}
 }
 
@@ -755,6 +766,10 @@ func marshalPrintOperation(p uintptr) (interface{}, error) {
 }
 
 func wrapPrintOperation(obj *glib.Object) *PrintOperation {
+	if obj == nil {
+		return nil
+	}
+
 	pop := wrapPrintOperationPreview(obj)
 	return &PrintOperation{obj, *pop}
 }
@@ -872,7 +887,13 @@ func (po *PrintOperation) SetCustomTabLabel(label string) {
 // Run() is a wrapper around gtk_print_operation_run().
 func (po *PrintOperation) Run(action PrintOperationAction, parent IWindow) (PrintOperationResult, error) {
 	var err *C.GError = nil
-	c := C.gtk_print_operation_run(po.native(), C.GtkPrintOperationAction(action), parent.toWindow(), &err)
+
+	var w *C.GtkWindow = nil
+	if parent != nil {
+		w = parent.toWindow()
+	}
+
+	c := C.gtk_print_operation_run(po.native(), C.GtkPrintOperationAction(action), w, &err)
 	res := PrintOperationResult(c)
 	if res == PRINT_OPERATION_RESULT_ERROR {
 		defer C.g_error_free(err)
@@ -949,44 +970,30 @@ func (po *PrintOperation) GetEmbedPageSetup() bool {
 
 // PrintRunPageSetupDialog() is a wrapper around gtk_print_run_page_setup_dialog().
 func PrintRunPageSetupDialog(parent IWindow, pageSetup *PageSetup, settings *PrintSettings) *PageSetup {
-	c := C.gtk_print_run_page_setup_dialog(parent.toWindow(), pageSetup.native(), settings.native())
+
+	var w *C.GtkWindow = nil
+	if parent != nil {
+		w = parent.toWindow()
+	}
+
+	c := C.gtk_print_run_page_setup_dialog(w, pageSetup.native(), settings.native())
 	obj := glib.Take(unsafe.Pointer(c))
 	return wrapPageSetup(obj)
 }
 
-type PageSetupDoneCallback func(setup *PageSetup, userData ...interface{})
-
-type pageSetupDoneCallbackData struct {
-	fn   PageSetupDoneCallback
-	data []interface{}
-}
-
-var (
-	pageSetupDoneCallbackRegistry = struct {
-		sync.RWMutex
-		next int
-		m    map[int]pageSetupDoneCallbackData
-	}{
-		next: 1,
-		m:    make(map[int]pageSetupDoneCallbackData),
-	}
-)
+type PageSetupDoneCallback func(setup *PageSetup)
 
 // PrintRunPageSetupDialogAsync() is a wrapper around gtk_print_run_page_setup_dialog_async().
 func PrintRunPageSetupDialogAsync(parent IWindow, setup *PageSetup,
-	settings *PrintSettings, cb PageSetupDoneCallback, data ...interface{}) {
+	settings *PrintSettings, cb PageSetupDoneCallback) {
 
-	pageSetupDoneCallbackRegistry.Lock()
-	id := pageSetupDoneCallbackRegistry.next
-	pageSetupDoneCallbackRegistry.next++
-	pageSetupDoneCallbackRegistry.m[id] =
-		pageSetupDoneCallbackData{fn: cb, data: data}
-	pageSetupDoneCallbackRegistry.Unlock()
+	var w *C.GtkWindow = nil
+	if parent != nil {
+		w = parent.toWindow()
+	}
 
-	C._gtk_print_run_page_setup_dialog_async(parent.toWindow(), setup.native(),
-		settings.native(), C.gpointer(uintptr(id)))
-
-	// This callback is cleaned up as soon as it has been called by GTK.
+	C._gtk_print_run_page_setup_dialog_async(w, setup.native(),
+		settings.native(), C.gpointer(callback.Assign(cb)))
 }
 
 /*
@@ -1022,6 +1029,10 @@ func marshalPrintOperationPreview(p uintptr) (interface{}, error) {
 }
 
 func wrapPrintOperationPreview(obj *glib.Object) *PrintOperationPreview {
+	if obj == nil {
+		return nil
+	}
+
 	return &PrintOperationPreview{obj}
 }
 
@@ -1071,6 +1082,10 @@ func marshalPrintSettings(p uintptr) (interface{}, error) {
 }
 
 func wrapPrintSettings(obj *glib.Object) *PrintSettings {
+	if obj == nil {
+		return nil
+	}
+
 	return &PrintSettings{obj}
 }
 
@@ -1162,39 +1177,15 @@ func (ps *PrintSettings) Unset(key string) {
 	C.gtk_print_settings_unset(ps.native(), (*C.gchar)(cstr))
 }
 
-type PrintSettingsCallback func(key, value string, userData ...interface{})
-
-type printSettingsCallbackData struct {
-	fn       PrintSettingsCallback
-	userData []interface{}
-}
-
-var (
-	printSettingsCallbackRegistry = struct {
-		sync.RWMutex
-		next int
-		m    map[int]printSettingsCallbackData
-	}{
-		next: 1,
-		m:    make(map[int]printSettingsCallbackData),
-	}
-)
+type PrintSettingsCallback func(key, value string)
 
 // Foreach() is a wrapper around gtk_print_settings_foreach().
-func (ps *PrintSettings) ForEach(cb PrintSettingsCallback, userData ...interface{}) {
-	printSettingsCallbackRegistry.Lock()
-	id := printSettingsCallbackRegistry.next
-	printSettingsCallbackRegistry.next++
-	printSettingsCallbackRegistry.m[id] =
-		printSettingsCallbackData{fn: cb, userData: userData}
-	printSettingsCallbackRegistry.Unlock()
-
-	C._gtk_print_settings_foreach(ps.native(), C.gpointer(uintptr(id)))
-
+func (ps *PrintSettings) ForEach(cb PrintSettingsCallback) {
 	// Clean up callback immediately as we only need it for the duration of this Foreach call
-	printSettingsCallbackRegistry.Lock()
-	delete(printSettingsCallbackRegistry.m, id)
-	printSettingsCallbackRegistry.Unlock()
+	id := callback.Assign(cb)
+	defer callback.Delete(id)
+
+	C._gtk_print_settings_foreach(ps.native(), C.gpointer(id))
 }
 
 // GetBool() is a wrapper around gtk_print_settings_get_bool().
@@ -1305,7 +1296,7 @@ func (ps *PrintSettings) GetPaperSize() (*PaperSize, error) {
 		return nil, nilPtrErr
 	}
 	p := &PaperSize{c}
-	runtime.SetFinalizer(p, (*PaperSize).free)
+	runtime.SetFinalizer(p, func(v *PaperSize) { glib.FinalizerStrategy(v.free) })
 	return p, nil
 }
 

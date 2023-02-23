@@ -1,14 +1,14 @@
-gotk3 [![GoDoc](https://godoc.org/github.com/gotk3/gotk3?status.svg)](https://godoc.org/github.com/gotk3/gotk3) 
+gotk3 [![GoDoc](https://godoc.org/github.com/gotk3/gotk3?status.svg)](https://godoc.org/github.com/gotk3/gotk3)
 =====
 
 [![Build Status](https://travis-ci.org/gotk3/gotk3.svg?branch=master)](https://travis-ci.org/gotk3/gotk3)
 
-The gotk3 project provides Go bindings for GTK+3 and dependent
+The gotk3 project provides Go bindings for GTK 3 and dependent
 projects.  Each component is given its own subdirectory, which is used
 as the import path for the package.  Partial binding support for the
 following libraries is currently implemented:
 
-- GTK+3 (3.12 and later)
+- GTK 3 (3.12 and later)
 - GDK 3 (3.12 and later)
 - GLib 2 (2.36 and later)
 - Cairo (1.10 and later)
@@ -17,8 +17,13 @@ Care has been taken for memory management to work seamlessly with Go's
 garbage collector without the need to use or understand GObject's
 floating references.
 
-for better understanding see 
+for better understanding see
 [package reference documation](https://pkg.go.dev/github.com/gotk3/gotk3/gtk?tab=doc)
+
+On Linux, see which version your distribution has [here](https://pkgs.org) with the search terms:
+* libgtk-3
+* libglib2
+* libgdk-pixbuf2
 
 ## Sample Use
 
@@ -192,7 +197,7 @@ http://localhost:6060/pkg/github.com/gotk3/gotk3
 
 ## Installation
 
-gotk3 currently requires GTK 3.6-3.24, GLib 2.36-2.40, and
+gotk3 currently requires GTK 3.6-3.24, GLib 2.36-2.46, and
 Cairo 1.10 or 1.12.  A recent Go (1.8 or newer) is also required.
 
 For detailed instructions see the wiki pages: [installation](https://github.com/gotk3/gotk3/wiki#installation)
@@ -208,10 +213,15 @@ Example:
 $ go build -tags "gtk_3_10 gtk_deprecated" example.go
 ```
 
+The same goes for
+* gdk-pixbuf: gdk_pixbuf_deprecated
+
 ## TODO
 
-- Add bindings for all of GTK+
+- Add bindings for all of GTK functions
 - Add tests for each implemented binding
+- See the next steps: [wiki page](https://github.com/gotk3/gotk3/wiki/The-future-and-what-happens-next) and add [your suggestion](https://github.com/gotk3/gotk3/issues/576)
+
 
 ## License
 

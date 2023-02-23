@@ -36,6 +36,10 @@ func marshalIconView(p uintptr) (interface{}, error) {
 }
 
 func wrapIconView(obj *glib.Object) *IconView {
+	if obj == nil {
+		return nil
+	}
+
 	return &IconView{Container{Widget{glib.InitiallyUnowned{obj}}}}
 }
 
@@ -72,13 +76,12 @@ func (v *IconView) SetModel(model ITreeModel) {
 }
 
 // GetModel is a wrapper around gtk_icon_view_get_model().
-func (v *IconView) GetModel() (*TreeModel, error) {
+func (v *IconView) GetModel() (ITreeModel, error) {
 	c := C.gtk_icon_view_get_model(v.native())
 	if c == nil {
 		return nil, nilPtrErr
 	}
-	obj := glib.Take(unsafe.Pointer(c))
-	return wrapTreeModel(obj), nil
+	return castTreeModel(c)
 }
 
 // SetTextColumn is a wrapper around gtk_icon_view_set_text_column().
@@ -122,7 +125,7 @@ func (v *IconView) GetPathAtPos(x, y int) *TreePath {
 
 	if cpath != nil {
 		path = &TreePath{cpath}
-		runtime.SetFinalizer(path, (*TreePath).free)
+		runtime.SetFinalizer(path, func(v *TreePath) { glib.FinalizerStrategy(v.free) })
 	}
 
 	return path
@@ -141,7 +144,7 @@ func (v *IconView) GetItemAtPos(x, y int) (*TreePath, *CellRenderer) {
 
 	if cpath != nil {
 		path = &TreePath{cpath}
-		runtime.SetFinalizer(path, (*TreePath).free)
+		runtime.SetFinalizer(path, func(v *TreePath) { glib.FinalizerStrategy(v.free) })
 	}
 
 	if ccell != nil {
@@ -178,7 +181,7 @@ func (v *IconView) GetCursor() (*TreePath, *CellRenderer) {
 
 	if cpath != nil {
 		path = &TreePath{cpath}
-		runtime.SetFinalizer(path, (*TreePath).free)
+		runtime.SetFinalizer(path, func(v *TreePath) { glib.FinalizerStrategy(v.free) })
 	}
 
 	if ccell != nil {
@@ -328,9 +331,11 @@ func (v *IconView) GetSelectedItems() *glib.List {
 		return &TreePath{(*C.GtkTreePath)(ptr)}
 	})
 	runtime.SetFinalizer(glist, func(glist *glib.List) {
-		glist.FreeFull(func(item interface{}) {
-			path := item.(*TreePath)
-			C.gtk_tree_path_free(path.GtkTreePath)
+		glib.FinalizerStrategy(func() {
+			glist.FreeFull(func(item interface{}) {
+				path := item.(*TreePath)
+				C.gtk_tree_path_free(path.GtkTreePath)
+			})
 		})
 	})
 
@@ -369,12 +374,12 @@ func (v *IconView) GetVisibleRange() (*TreePath, *TreePath) {
 
 	if cpathStart != nil {
 		pathStart = &TreePath{cpathStart}
-		runtime.SetFinalizer(pathStart, (*TreePath).free)
+		runtime.SetFinalizer(pathStart, func(v *TreePath) { glib.FinalizerStrategy(v.free) })
 	}
 
 	if cpathEnd != nil {
 		pathEnd = &TreePath{cpathEnd}
-		runtime.SetFinalizer(pathEnd, (*TreePath).free)
+		runtime.SetFinalizer(pathEnd, func(v *TreePath) { glib.FinalizerStrategy(v.free) })
 	}
 
 	return pathStart, pathEnd
@@ -420,12 +425,12 @@ func (v *IconView) GetTooltipContext(x, y int, keyboardTip bool) (*TreeModel, *T
 
 	if cpath != nil {
 		path = &TreePath{cpath}
-		runtime.SetFinalizer(path, (*TreePath).free)
+		runtime.SetFinalizer(path, func(v *TreePath) { glib.FinalizerStrategy(v.free) })
 	}
 
 	if citer != nil {
 		iter = &TreeIter{*citer}
-		runtime.SetFinalizer(iter, (*TreeIter).free)
+		runtime.SetFinalizer(iter, func(v *TreeIter) { glib.FinalizerStrategy(v.free) })
 	}
 
 	return model, path, iter
