@@ -1,11 +1,13 @@
 stages:
   - build
 
+image:
+  name: digitalautonomy/debianpackaging:0.11
+
 build:
   stage: build
-  image: sacurio/debianpackager:0.2
   before_script:
-    - 'apt-get update && apt-get install -y --no-install-recommends libglib2.0-dev libcairo2-dev libpango1.0-dev libgtk-3-dev xvfb xauth'
+    - DEBIAN_FRONTEND=noninteractive apt -y install --no-install-recommends libglib2.0-dev libcairo2-dev libpango1.0-dev libgtk-3-dev xvfb xauth
     - "eval $(ssh-agent -s)"
     - 'ssh-add <(echo "$DEBIAN_PACKAGING_PRIVATE_KEY")'
     - mkdir -p ~/.ssh; chmod 700 ~/.ssh
@@ -13,7 +15,7 @@ build:
     - 'echo -e "|1|2sb5M4s4CRFlFYvv90vdWG9vyyg=|AGJyZ+2uBC7mOWJ2xHsW0En4tcU= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIx8qF3puSAM1UAxc3ODJTNGrgwf8mET664pPfP/ZQgiMxTIKG8Ar8h1xxP52AyQoqTLpCWOPaBkUya2Q0+SZTg=" >> ~/.ssh/known_hosts'
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - gbp buildpackage --git-ignore-branch --git-no-pristine-tar --no-sign
+    - gbp buildpackage --git-debian-branch=main --git-ignore-branch --git-no-pristine-tar --no-sign
     - mkdir debian_build
     - 'cp ../*.{deb,dsc,changes,tar.xz} debian_build'
     - 'scp -P 4242 debian_build/*.{deb,dsc,changes,tar.xz} repo@debian.autonomia.digital:/home/repo/packages/upload'
