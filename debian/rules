@@ -6,3 +6,6 @@
 override_dh_auto_test:
 	xvfb-run dh_auto_test --
 
+override_dh_auto_build:
+	dh_auto_build -O--buildsystem=golang -- -tags gtk_3_18,glib_2_66
+
