@@ -1,3 +1,15 @@
+golang-github-gotk3-gotk3 (0.6.2-1) UNRELEASED; urgency=medium
+
+  [ CAD Debian Packager ]
+  * New upstream release (655547b)
+
+  [ Ola Bini ]
+  * We need to explicitly set the gtk and glib versions to use when building
+  * We need to add the glib and gtk tags when running tests as well
+  * Only run on man
+
+ -- CAD Debian Packager <debian-packager@autonomia.digital>  Sat, 29 Apr 2023 22:37:23 +0000
+
 golang-github-gotk3-gotk3 (0.6.1+git20220918.655547b-1) unstable; urgency=medium
 
   [ CAD Debian Packager ]
